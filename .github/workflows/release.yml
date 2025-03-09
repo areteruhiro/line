@@ -61,6 +61,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-artifacts
+          path: patches/build/libs/*.jar  
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
