@@ -61,7 +61,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload JAR artifact
+      - name: Upload rvp artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-artifacts
