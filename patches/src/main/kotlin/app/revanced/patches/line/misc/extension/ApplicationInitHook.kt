@@ -1,4 +1,4 @@
-package app.revanced.patches.line.misc.extension.hooks
+package app.revanced.patches.line.misc.extension
 
 import app.revanced.patches.shared.misc.extension.extensionHook
 

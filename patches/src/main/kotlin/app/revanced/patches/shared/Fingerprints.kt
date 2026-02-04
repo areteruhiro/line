@@ -4,7 +4,7 @@ import app.revanced.patcher.fingerprint
 
 
 internal val castContextFetchFingerprint = fingerprint {
-    strings("Error fetching CastContext.")
+    strings("Error fetching PackageInfo.")
 }
 
 internal val primeMethodFingerprint = fingerprint {

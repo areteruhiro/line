@@ -20,7 +20,7 @@ internal val serviceCheckFingerprint = fingerprint {
     strings("Google Play Services not available")
 }
 
-internal val gmsCoreVendorStringFingerprint = fingerprint {
+internal val gmsCoreSupportFingerprint = fingerprint {
     strings(
         "com.google.android.gms",
         "com.android.vending"

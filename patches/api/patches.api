@@ -1,3 +1,7 @@
+public final class BKt {
+	public static final fun getDisableTamperDetectionPatch ()Lapp/revanced/patcher/patch/BytecodePatch;
+}
+
 public final class app/revanced/patches/all/misc/activity/exportall/ExportAllActivitiesPatchKt {
 	public static final fun getExportAllActivitiesPatch ()Lapp/revanced/patcher/patch/ResourcePatch;
 }
@@ -164,6 +168,18 @@ public final class app/revanced/patches/bandcamp/limitations/RemovePlayLimitsPat
 	public static final fun getRemovePlayLimitsPatch ()Lapp/revanced/patcher/patch/BytecodePatch;
 }
 
+public final class app/revanced/patches/chmate/AKt {
+	public static final fun getDisableTamperPatchA ()Lapp/revanced/patcher/patch/BytecodePatch;
+}
+
+public final class app/revanced/patches/chmate/CKt {
+	public static final fun getDisableTamperPatch ()Lapp/revanced/patcher/patch/BytecodePatch;
+}
+
+public final class app/revanced/patches/chmate/EKt {
+	public static final fun getDisableTamperRequestB ()Lapp/revanced/patcher/patch/BytecodePatch;
+}
+
 public final class app/revanced/patches/cieid/restrictions/root/BypassRootChecksPatchKt {
 	public static final fun getBypassRootChecksPatch ()Lapp/revanced/patcher/patch/BytecodePatch;
 }
@@ -326,6 +342,26 @@ public final class app/revanced/patches/lightroom/misc/login/DisableMandatoryLog
 
 public final class app/revanced/patches/lightroom/misc/premium/UnlockPremiumPatchKt {
 	public static final fun getUnlockPremiumPatch ()Lapp/revanced/patcher/patch/BytecodePatch;
+}
+
+public final class app/revanced/patches/line/misc/appname/SpoofSignaturePatchKt {
+	public static final fun getLineGlobalPackageStringPatch ()Lapp/revanced/patcher/patch/BytecodePatch;
+}
+
+public final class app/revanced/patches/line/misc/appname/UnsupportedKt {
+	public static final fun getLineRemoveUnsupportedAttrsPatch ()Lapp/revanced/patcher/patch/ResourcePatch;
+}
+
+public final class app/revanced/patches/line/misc/extension/SharedExtensionPatchKt {
+	public static final fun getSharedExtensionPatch ()Lapp/revanced/patcher/patch/BytecodePatch;
+}
+
+public final class app/revanced/patches/line/misc/gms/Constants {
+	public static final field INSTANCE Lapp/revanced/patches/line/misc/gms/Constants;
+}
+
+public final class app/revanced/patches/line/misc/gms/GmsCoreSupportPatchKt {
+	public static final fun getGmsCoreSupportPatch ()Lapp/revanced/patcher/patch/BytecodePatch;
 }
 
 public final class app/revanced/patches/memegenerator/detection/license/LicenseValidationPatchKt {
