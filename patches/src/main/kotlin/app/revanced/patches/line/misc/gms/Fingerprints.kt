@@ -1,4 +1,4 @@
-package app.revanced.patches.line.misc.gms.fingerprints
+package app.revanced.patches.line.misc.gms
 
 import app.revanced.patcher.fingerprint
 internal val MainActivityFingerprint = fingerprint {

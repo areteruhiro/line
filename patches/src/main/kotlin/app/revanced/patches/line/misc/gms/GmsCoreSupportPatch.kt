@@ -2,7 +2,6 @@ package app.revanced.patches.line.misc.gms
 
 import app.revanced.patcher.patch.Option
 import app.revanced.patches.line.misc.extension.sharedExtensionPatch
-import app.revanced.patches.line.misc.gms.fingerprints.MainActivityFingerprint
 import app.revanced.patches.shared.castContextFetchFingerprint
 import app.revanced.patches.shared.misc.gms.gmsCoreSupportPatch
 import app.revanced.patches.shared.primeMethodFingerprint
