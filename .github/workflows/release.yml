@@ -42,12 +42,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew :patches:buildAndroid
 
-      - name: Upload rvp artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-artifacts
-          path: patches/build/libs/**/*
-
       # optional GitHub Release (手動リリース用)
       - name: Upload to GitHub Release (softprops)
         uses: softprops/action-gh-release@v2
