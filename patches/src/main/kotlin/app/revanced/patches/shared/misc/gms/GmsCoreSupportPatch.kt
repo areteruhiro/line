@@ -1,10 +1,18 @@
 package app.revanced.patches.shared.misc.gms
 
 import app.revanced.patcher.Fingerprint
-import app.revanced.patcher.extensions.InstructionExtensions.addInstructions
+import app.revanced.patcher.extensions.InstructionExtensions.addInstruction
 import app.revanced.patcher.extensions.InstructionExtensions.instructions
 import app.revanced.patcher.extensions.InstructionExtensions.replaceInstruction
-import app.revanced.patcher.patch.*
+import app.revanced.patcher.patch.BytecodePatchBuilder
+import app.revanced.patcher.patch.BytecodePatchContext
+import app.revanced.patcher.patch.Option
+import app.revanced.patcher.patch.Patch
+import app.revanced.patcher.patch.ResourcePatchBuilder
+import app.revanced.patcher.patch.ResourcePatchContext
+import app.revanced.patcher.patch.bytecodePatch
+import app.revanced.patcher.patch.resourcePatch
+import app.revanced.patcher.patch.stringOption
 import app.revanced.patches.all.misc.packagename.changePackageNamePatch
 import app.revanced.patches.all.misc.packagename.setOrGetFallbackPackageName
 import app.revanced.patches.all.misc.resources.addResources
@@ -12,17 +20,19 @@ import app.revanced.patches.all.misc.resources.addResourcesPatch
 import app.revanced.patches.shared.misc.gms.Constants.ACTIONS
 import app.revanced.patches.shared.misc.gms.Constants.AUTHORITIES
 import app.revanced.patches.shared.misc.gms.Constants.PERMISSIONS
-import app.revanced.util.*
+import app.revanced.util.getReference
+import app.revanced.util.returnEarly
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.builder.instruction.BuilderInstruction21c
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.formats.Instruction21c
-import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.iface.reference.StringReference
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableStringReference
 import com.android.tools.smali.dexlib2.util.MethodUtil
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+
+internal const val EXTENSION_CLASS_DESCRIPTOR = "Lapp/revanced/extension/shared/GmsCoreSupport;"
 
 private const val PACKAGE_NAME_REGEX_PATTERN = "^[a-z]\\w*(\\.[a-z]\\w*)+\$"
 
@@ -53,16 +63,16 @@ fun gmsCoreSupportPatch(
     block: BytecodePatchBuilder.() -> Unit = {},
 ) = bytecodePatch(
     name = "GmsCore support",
-    description = "Allows patched Google apps to run without root and under a different package name " +
-        "by using GmsCore instead of Google Play Services.",
+    description = "Allows the app to work without root by using a different package name when patched " +
+            "using a GmsCore instead of Google Play Services.",
 ) {
     val gmsCoreVendorGroupIdOption = stringOption(
         key = "gmsCoreVendorGroupId",
         default = "app.revanced",
         values =
-        mapOf(
-            "ReVanced" to "app.revanced",
-        ),
+            mapOf(
+                "ReVanced" to "app.revanced",
+            ),
         title = "GmsCore vendor group ID",
         description = "The vendor's group ID for GmsCore.",
         required = true,
@@ -110,19 +120,18 @@ fun gmsCoreSupportPatch(
 
         // region Collection of transformations that are applied to all strings.
 
-        fun commonTransform(referencedString: String): String? =
-            when (referencedString) {
-                "com.google",
-                "com.google.android.gms",
-                in PERMISSIONS,
-                in ACTIONS,
-                in AUTHORITIES,
+        fun commonTransform(referencedString: String): String? = when (referencedString) {
+            "com.google",
+            "com.google.android.gms",
+            in PERMISSIONS,
+            in ACTIONS,
+            in AUTHORITIES,
                 -> referencedString.replace("com.google", gmsCoreVendorGroupId!!)
 
-                // No vendor prefix for whatever reason...
-                "subscribedfeeds" -> "$gmsCoreVendorGroupId.subscribedfeeds"
-                else -> null
-            }
+            // No vendor prefix for whatever reason...
+            "subscribedfeeds" -> "$gmsCoreVendorGroupId.subscribedfeeds"
+            else -> null
+        }
 
         fun contentUrisTransform(str: String): String? {
             // only when content:// uri
@@ -150,9 +159,9 @@ fun gmsCoreSupportPatch(
 
         fun packageNameTransform(fromPackageName: String, toPackageName: String): (String) -> String? = { string ->
             when (string) {
-                "$fromPackageName.SuggestionsProvider",
+                "$fromPackageName.SuggestionProvider",
                 "$fromPackageName.fileprovider",
-                -> string.replace(fromPackageName, toPackageName)
+                    -> string.replace(fromPackageName, toPackageName)
 
                 else -> null
             }
@@ -207,6 +216,7 @@ fun gmsCoreSupportPatch(
                 replaceInstruction(index, "const-string v$register, \"$packageName\"")
             }
         }
+
         // endregion
 
         val packageName = setOrGetFallbackPackageName(toPackageName)
@@ -226,47 +236,29 @@ fun gmsCoreSupportPatch(
         }
 
         // Specific method that needs to be patched.
-        // Specific method that needs to be patched.
-        try {
-            primeMethodFingerprint?.let { transformPrimeMethod(packageName) }
-        } catch (e: Exception) {
-            println("Failed to transform prime method: ${e.message}")
-        }
+        primeMethodFingerprint?.let { transformPrimeMethod(packageName) }
 
         // Return these methods early to prevent the app from crashing.
         earlyReturnFingerprints.forEach { it.method.returnEarly() }
-
-        // Specific method that needs to be patched.
-        try {
-            serviceCheckFingerprint.method.returnEarly()
-        } catch (e: Exception) {
-            println("Failed to transform prime method: ${e.message}")
-        }
-
+        serviceCheckFingerprint.method.returnEarly()
 
         // Google Play Utility is not present in all apps, so we need to check if it's present.
-
-        // Verify GmsCore is installed and whitelisted for power optimizations and background usage.
-        mainActivityOnCreateFingerprint.method.apply {
-            // Temporary fix for patches with an extension patch that hook the onCreate method as well.
-            val setContextIndex = indexOfFirstInstruction {
-                val reference = getReference<MethodReference>() ?: return@indexOfFirstInstruction false
-
-                reference.toString() == "Lapp/revanced/extension/shared/Utils;->setContext(Landroid/content/Context;)V"
-            }
-
-            // Add after setContext call, because this patch needs the context.
-            addInstructions(
-                if (setContextIndex < 0) 0 else setContextIndex + 1,
-                "invoke-static/range { p0 .. p0 }, Lapp/revanced/extension/shared/GmsCoreSupport;->" +
-                    "checkGmsCore(Landroid/app/Activity;)V",
-            )
+        if (googlePlayUtilityFingerprint.methodOrNull != null) {
+            googlePlayUtilityFingerprint.method.returnEarly(0)
         }
 
+        // Set original and patched package names for extension to use.
+        originalPackageNameExtensionFingerprint.method.returnEarly(fromPackageName)
+
+        // Verify GmsCore is installed and whitelisted for power optimizations and background usage.
+        mainActivityOnCreateFingerprint.method.addInstruction(
+            0,
+            "invoke-static/range { p0 .. p0 }, $EXTENSION_CLASS_DESCRIPTOR->" +
+                    "checkGmsCore(Landroid/app/Activity;)V"
+        )
+
         // Change the vendor of GmsCore in the extension.
-        originalPackageNameExtensionFingerprint.classDef.methods
-            .single { it.name == GET_GMS_CORE_VENDOR_GROUP_ID_METHOD_NAME }
-            .replaceInstruction(0, "const-string v0, \"$gmsCoreVendorGroupId\"")
+        gmsCoreSupportFingerprint.method.returnEarly(gmsCoreVendorGroupId!!)
 
         executeBlock()
     }
@@ -525,7 +517,6 @@ private object Constants {
         "com.google.android.mobstore.service.START",
         "com.google.firebase.auth.api.gms.service.START",
         "com.google.firebase.dynamiclinks.service.START",
-        "com.google.firebase.sessions.SessionLifecycleService",
         "com.google.iid.TOKEN_REQUEST",
         "com.google.android.gms.location.places.ui.PICK_PLACE",
     )
@@ -554,11 +545,42 @@ private object Constants {
  * @param executeBlock The additional execution block of the patch.
  * @param block The additional block to build the patch.
  */
-fun gmsCoreSupportResourcePatch(
+fun gmsCoreSupportResourcePatch( // This is here only for binary compatibility.
     fromPackageName: String,
     toPackageName: String,
     spoofedPackageSignature: String,
     gmsCoreVendorGroupIdOption: Option<String>,
+    executeBlock: ResourcePatchContext.() -> Unit = {},
+    block: ResourcePatchBuilder.() -> Unit = {},
+) = gmsCoreSupportResourcePatch(
+    fromPackageName,
+    toPackageName,
+    spoofedPackageSignature,
+    gmsCoreVendorGroupIdOption,
+    true,
+    executeBlock,
+    block
+)
+
+/**
+ * Abstract resource patch that allows Google apps to run without root and under a different package name
+ * by using GmsCore instead of Google Play Services.
+ *
+ * @param fromPackageName The package name of the original app.
+ * @param toPackageName The package name to fall back to if no custom package name is specified in patch options.
+ * @param spoofedPackageSignature The signature of the package to spoof to.
+ * @param gmsCoreVendorGroupIdOption The option to get the vendor group ID of GmsCore.
+ * @param addStringResources If the GmsCore shared strings should be added to the patched app.
+ * @param executeBlock The additional execution block of the patch.
+ * @param block The additional block to build the patch.
+ */
+// TODO: On the next major release make this public and delete the public overloaded constructor.
+internal fun gmsCoreSupportResourcePatch(
+    fromPackageName: String,
+    toPackageName: String,
+    spoofedPackageSignature: String,
+    gmsCoreVendorGroupIdOption: Option<String>,
+    addStringResources: Boolean = true,
     executeBlock: ResourcePatchContext.() -> Unit = {},
     block: ResourcePatchBuilder.() -> Unit = {},
 ) = resourcePatch {
@@ -570,7 +592,10 @@ fun gmsCoreSupportResourcePatch(
     val gmsCoreVendorGroupId by gmsCoreVendorGroupIdOption
 
     execute {
-        addResources("shared", "misc.gms.gmsCoreSupportResourcePatch")
+        // Some patches don't use shared String resources so there's no need to add them.
+        if (addStringResources) {
+            addResources("shared", "misc.gms.gmsCoreSupportResourcePatch")
+        }
 
         /**
          * Add metadata to manifest to support spoofing the package name and signature of GmsCore.

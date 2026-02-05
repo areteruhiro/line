@@ -1,6 +1,7 @@
 package app.revanced.patches.shared.misc.gms
 
 import app.revanced.patcher.fingerprint
+import app.revanced.patches.shared.misc.gms.EXTENSION_CLASS_DESCRIPTOR
 import com.android.tools.smali.dexlib2.AccessFlags
 
 const val GET_GMS_CORE_VENDOR_GROUP_ID_METHOD_NAME = "getGmsCoreVendorGroupId"
@@ -21,18 +22,16 @@ internal val serviceCheckFingerprint = fingerprint {
 }
 
 internal val gmsCoreSupportFingerprint = fingerprint {
-    strings(
-        "com.google.android.gms",
-        "com.android.vending"
-    )
+    custom { _, classDef ->
+        classDef.endsWith("GmsCoreSupport;")
+    }
 }
-
 
 internal val originalPackageNameExtensionFingerprint = fingerprint {
     accessFlags(AccessFlags.PRIVATE, AccessFlags.STATIC)
     returns("Ljava/lang/String;")
     parameters()
     custom { methodDef, classDef ->
-        methodDef.name == "getOriginalPackageName"
+        methodDef.name == "getOriginalPackageName" && classDef.type == EXTENSION_CLASS_DESCRIPTOR
     }
 }

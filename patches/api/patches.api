@@ -344,10 +344,6 @@ public final class app/revanced/patches/lightroom/misc/premium/UnlockPremiumPatc
 	public static final fun getUnlockPremiumPatch ()Lapp/revanced/patcher/patch/BytecodePatch;
 }
 
-public final class app/revanced/patches/line/misc/appname/SpoofSignaturePatchKt {
-	public static final fun getLineGlobalPackageStringPatch ()Lapp/revanced/patcher/patch/BytecodePatch;
-}
-
 public final class app/revanced/patches/line/misc/appname/UnsupportedKt {
 	public static final fun getLineRemoveUnsupportedAttrsPatch ()Lapp/revanced/patcher/patch/ResourcePatch;
 }
