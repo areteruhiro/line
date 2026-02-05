@@ -176,7 +176,12 @@ fun gmsCoreSupportPatch(
 
                 // デバッグログ: instructions の内容を出力
                 println("Checking instructions in method: ${this.name}")
+
+                var patchedCount = 0
+
+                // 2. メソッド内の全命令を走査
                 instructions.forEachIndexed { i, instruction ->
+                    // 文字列定数（const-string）の参照を取得
                     val stringRef = instruction.getReference<StringReference>()
                     if (stringRef != null) {
                         println("Instruction $i: ${stringRef.string}")
@@ -520,6 +525,7 @@ private object Constants {
         "com.google.android.mobstore.service.START",
         "com.google.firebase.auth.api.gms.service.START",
         "com.google.firebase.dynamiclinks.service.START",
+        "com.google.firebase.sessions.SessionLifecycleService",
         "com.google.iid.TOKEN_REQUEST",
         "com.google.android.gms.location.places.ui.PICK_PLACE",
     )
