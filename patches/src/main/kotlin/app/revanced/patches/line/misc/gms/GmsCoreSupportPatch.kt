@@ -7,7 +7,7 @@ import app.revanced.patches.shared.misc.gms.gmsCoreSupportPatch
 import app.revanced.patches.shared.primeMethodFingerprint
 
 internal object LineConstants {
-    const val MICROG_SIGNATURE = "d04afd875d3811b16019948ed85896f4d11d51d4"
+    const val MICROG_SIGNATURE = "89396dc419292473972813922867e6973d6f5c50"
 }
 
 @Suppress("unused")

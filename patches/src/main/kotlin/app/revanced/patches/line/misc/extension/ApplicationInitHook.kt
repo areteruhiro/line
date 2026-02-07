@@ -9,9 +9,11 @@ import app.revanced.patches.shared.misc.extension.extensionHook
 internal val applicationInitHook = extensionHook {
     returns("V")
     parameters()
-    strings("activity")
-    custom { method, _ -> method.name == "onCreate" }
+    custom { method, classDef ->
+        method.name == "onCreate" &&
+                classDef.type == "Ljp/naver/line/android/LineApplication;"
     }
+}
 
 
 
